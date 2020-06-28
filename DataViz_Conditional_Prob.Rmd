@@ -1,0 +1,74 @@
+---
+title: "DataViz_Conditional_Prob"
+author: "Minruo Wang"
+date: "6/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Performance
+
+```{r}
+quiz_scores <- read.csv("quiz_scores.csv", header = TRUE)
+```
+
+### Feedback
+
+```{r}
+# load packages
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(syuzhet)
+library(ggplot2)
+```
+
+```{r}
+# Read the text file
+feedback_text <- readLines("feedback_text.txt")
+
+# Load the data as a corpus
+corpus <- Corpus(VectorSource(feedback_text))
+
+# Clean text data
+#Remove spaces
+corpus <- tm_map(corpus, stripWhitespace)
+#Convert to lower case 
+corpus <- tm_map(corpus, tolower) 
+#Remove pre-defined stop words ('the', 'a', etc) 
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+#Convert words to stems ("education" = "edu") for analysis
+corpus <- tm_map(corpus, stemDocument)
+#Remove punctuation 
+corpus <- tm_map(corpus, removePunctuation)
+#Convert to plain text for mapping by wordcloud package
+corpus <- tm_map(corpus, PlainTextDocument, lazy = TRUE)
+```
+
+
+```{r}
+library(sjPlot)
+
+# load data
+class_feedback <- read.csv("feedback_likert.csv", header = TRUE)
+class_feedback$Q1 <- as.factor(class_feedback$Q1)
+class_feedback$Q2 <- as.factor(class_feedback$Q2)
+class_feedback$Q3 <- as.factor(class_feedback$Q3)
+class_feedback$Q4 <- as.factor(class_feedback$Q4)
+class_feedback$Q5 <- as.factor(class_feedback$Q5)
+class_feedback$Q6 <- as.factor(class_feedback$Q6)
+class_feedback$Q7 <- as.factor(class_feedback$Q7)
+class_feedback$Q8 <- as.factor(class_feedback$Q8)
+
+# create likert plot
+likert_6 <- class_feedback
+levels_6 <- c("Strongly agree", "Agree", "Somewhat agree", "Somewhat disagree", "Disagree", "Strongly disagree")
+plot_likert(likert_6, legend.labels = levels_6, reverse.colors = TRUE, values = "show", title = "Questionnaire Feedback")
+```
+
+
+
