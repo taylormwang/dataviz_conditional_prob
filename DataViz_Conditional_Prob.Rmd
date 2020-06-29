@@ -13,6 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 quiz_scores <- read.csv("quiz_scores.csv", header = TRUE)
+summary(quiz_scores$final_score)
+
+hist(quiz_scores$final_score, breaks = 5, main = "Histogram of Quiz Final Score", xlab = "Final Score")
 ```
 
 ### Feedback
@@ -21,12 +24,13 @@ quiz_scores <- read.csv("quiz_scores.csv", header = TRUE)
 # load packages
 library(tm)
 library(SnowballC)
-library(wordcloud)
 library(RColorBrewer)
 library(syuzhet)
 library(ggplot2)
 ```
 
+
+#### Overall Satisfaction: Sentiment Analysis
 ```{r}
 # Read the text file
 feedback_text <- readLines("feedback_text.txt")
@@ -41,14 +45,75 @@ corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, tolower) 
 #Remove pre-defined stop words ('the', 'a', etc) 
 corpus <- tm_map(corpus, removeWords, stopwords('english'))
-#Convert words to stems ("education" = "edu") for analysis
-corpus <- tm_map(corpus, stemDocument)
 #Remove punctuation 
 corpus <- tm_map(corpus, removePunctuation)
-#Convert to plain text for mapping by wordcloud package
-corpus <- tm_map(corpus, PlainTextDocument, lazy = TRUE)
+#Convert words to stems ("education" = "edu") for analysis
+corpus <- tm_map(corpus, stemDocument)
+# Remove your own stop word
+corpus <- tm_map(corpus, removeWords, c("class", "today", "susan", "xinxin"))
+
+# view the corpus
+corpus[[1]][1]
+
+# Build a term-document matrix
+text_dtm <- TermDocumentMatrix(corpus)
+dtm_m <- as.matrix(text_dtm)
+# Sort by descearing value of frequency
+dtm_v <- sort(rowSums(dtm_m),decreasing=TRUE)
+dtm_d <- data.frame(word = names(dtm_v),freq=dtm_v)
+# Display the top 5 most frequent words
+head(dtm_d, 5)
+
+## Sentiment scores
+# regular sentiment score using get_sentiment() function and method of your choice
+# please note that different methods may have different scales
+syuzhet_vector <- get_sentiment(feedback_text, method="syuzhet")
+# see the first row of the vector
+head(syuzhet_vector)
+# see summary statistics of the vector
+summary(syuzhet_vector)
+
+# Emotion Classification
+# run nrc sentiment analysis to return data frame with each row classified as one of the following
+# emotions, rather than a score: 
+# anger, anticipation, disgust, fear, joy, sadness, surprise, trust 
+# It also counts the number of positive and negative emotions found in each row
+d <- get_nrc_sentiment(feedback_text)
+# head(d,10) - to see top 10 lines of the get_nrc_sentiment dataframe
+head (d,10)
+
+# Visualize emotions
+#transpose
+td <- data.frame(t(d))
+#The function rowSums computes column sums across rows for each level of a grouping variable.
+td_new <- data.frame(rowSums(td[2:7]))
+#Transformation and cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:8,]
+#Plot One - count of words associated with each sentiment
+quickplot(sentiment, data = td_new2, weight = count, geom = "bar", fill = sentiment, 
+          ylab = "Count", xlab = "Sentiments") + 
+  ggtitle("Sentiments in Survey Feedback (as frequency)") +
+  theme_bw()
+  
+#Plot two - count of words associated with each sentiment, expressed as a percentage
+prop_tb <- data.frame(colSums(prop.table(d[, 1:8])))
+prop_value <- prop_tb[,1]
+prop_name <- rownames(prop_tb)
+prop_tb <- data.frame(Sentiments = prop_name, Percentage = prop_value)
+# barplot
+ggplot(prop_tb, aes(x = reorder(Sentiments, Percentage), y = Percentage, fill = Sentiments)) +
+  ggtitle("Sentiments in Survey Feedback (as percentage)") +
+  xlab("Sentiments") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_bw()
 ```
 
+#### Survey Feedback: Likert-Scales
 
 ```{r}
 library(sjPlot)
@@ -67,7 +132,14 @@ class_feedback$Q8 <- as.factor(class_feedback$Q8)
 # create likert plot
 likert_6 <- class_feedback
 levels_6 <- c("Strongly agree", "Agree", "Somewhat agree", "Somewhat disagree", "Disagree", "Strongly disagree")
-plot_likert(likert_6, legend.labels = levels_6, reverse.colors = TRUE, values = "show", title = "Questionnaire Feedback")
+plot_likert(likert_6, 
+            legend.labels = levels_6, 
+            reverse.colors = TRUE, 
+            values = "sum.outside", 
+            title = "Questionnaire Feedback",
+            geom.size = 0.8,
+            show.prc.sign = TRUE,
+            grid.range = c(0.8,1.2))
 ```
 
 

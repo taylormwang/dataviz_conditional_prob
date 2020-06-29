@@ -1,0 +1,177 @@
+---
+title: "Shiny_Conditional_Prob"
+author: "Minruo Wang"
+date: "6/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# packages
+library(markdown)
+library(tm)
+library(SnowballC)
+library(RColorBrewer)
+library(syuzhet)
+library(ggplot2)
+library(sjPlot)
+```
+
+### UI
+```{r}
+library(shiny)
+# Define UI for application that draws a histogram
+
+navbarPage("Group 5",
+  tabPanel("Performance",
+    sidebarLayout(
+      sidebarPanel(
+        checkboxGroupInput("score", "Options",
+                     c("Final Score", "Quiz1", "Quiz2", "Quiz3", "Quiz4"))
+      ),
+      mainPanel(
+        plotOutput("plot")
+      )
+    )
+  ),
+  tabPanel("Feedback",
+    verbatimTextOutput("summary")
+  ),
+  tabPanel("Reflection")
+)
+```
+
+
+```{r}
+library(shinydashboard)
+
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("Performance", tabName = "performance", icon = icon("th")),
+    menuItem("Feedback", tabName = "feedback", icon = icon("th")),
+    menuItem("Reflection", tabName = "reflection", icon = icon("th"))
+  )
+)
+
+body <- dashboardBody(
+  tabItems(
+    ## using box to display plots
+    tabItem(tabName = "performance",
+            fluidRow(
+              box(title = "General Information", status = "primary", "Engagement rate: 64%", br(), 
+                  "Total correct answers: 23.44%", br(),
+                  "Average score: 683.94 points", br(),
+                  plotOutput("plotall", height = 344)),
+              tabBox(id="tabchart", 
+                   tabPanel("Quiz1", plotOutput("plot1")),
+                   tabPanel("Quiz2", plotOutput("plot2")),
+                   tabPanel("Quiz3", plotOutput("plot3")),
+                   tabPanel("Quiz4", plotOutput("plot4")),
+                   tabPanel("Comparison", plotOutput("comp")),
+                   tabPanel("Correlation", plotOutput("corr"))
+            )
+            
+    ),
+
+    tabItem(tabName = "feedback",
+
+    ),
+    
+    tabItem(tabName = "reflection",
+
+    )
+  )
+)
+)
+
+# Put them together into a dashboardPage
+ui <- dashboardPage(
+  dashboardHeader(title = "Group 5"),
+  sidebar,
+  body
+)
+
+server <- function(input, output, session) {
+  output$menuitem <- renderMenu({
+    menuItem("Menu item", icon = icon("calendar"))
+  })
+  
+  # load quiz data
+  quiz_scores <- read.csv("quiz_scores.csv", header = TRUE)
+  quiz_scores$total_answertime <- quiz_scores$quiz1_answertime + quiz_scores$quiz2_answertime + 
+      quiz_scores$quiz3_answertime + quiz_scores$quiz4_answertime # new variable: total answer time
+  
+  # Plot Histogram: final score
+  output$plotall <- renderPlot({
+    hist(quiz_scores$final_score, 
+         breaks = 5, 
+         main = "Quiz Score Distribution", 
+         xlab = "Final Score")
+  })
+  
+  # Plot Histogram: quiz 1
+  output$plot1 <- renderPlot({
+    hist(quiz_scores$quiz1_score, 
+         main = "Quiz 1 Score Distribution", 
+         xlab = "Score")
+  })
+  
+  # Plot Histogram: quiz 2
+  output$plot2 <- renderPlot({
+    hist(quiz_scores$quiz2_score, 
+         main = "Quiz 2 Score Distribution", 
+         xlab = "Score")
+  })
+
+  # Plot Histogram: quiz 3
+  output$plot3 <- renderPlot({
+    hist(quiz_scores$quiz3_score, 
+         main = "Quiz 3 Score Distribution", 
+         xlab = "Score")
+  })
+  
+  # Plot Histogram: quiz 4
+  output$plot4 <- renderPlot({
+    hist(quiz_scores$quiz4_score, 
+         main = "Quiz 4 Score Distribution", 
+         xlab = "Score")
+  })
+  
+  # Comparison
+  output$comp <- renderPlot({
+    # create mean score
+    quiz1_mean <- mean(quiz_scores$quiz1_score)
+    quiz2_mean <- mean(quiz_scores$quiz2_score)
+    quiz3_mean <- mean(quiz_scores$quiz3_score)
+    quiz4_mean <- mean(quiz_scores$quiz4_score)
+    mean_score <- c(quiz1_mean,quiz2_mean,quiz3_mean,quiz4_mean)
+    quiz <- c("quiz1","quiz2","quiz3","quiz4")
+    data <- data.frame(quiz = quiz, mean_score = mean_score)
+    
+    ggplot(data) +
+      geom_col(aes(x = quiz, y = mean_score)) +
+      ggtitle("Comparison of Mean Score across Quizzes") +
+      xlab("Quiz") +
+      ylab("Average score")
+  })
+  
+  # Correlation between Final Score and Answer Time
+  output$corr <- renderPlot({
+    plot(x = quiz_scores$total_answertime, y = quiz_scores$final_score, 
+         main = "Correlation between Final Score and Answer Time",
+         xlab = "Total Answer Time",
+         ylab = "Final Score")
+    abline(lm(final_score ~ total_answertime, data = quiz_scores))
+  })
+  
+}
+
+shinyApp(ui, server)
+```
+
+
+
