@@ -12,10 +12,38 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Performance
 
 ```{r}
+library(ggplot2)
+library(ggthemes)
 quiz_scores <- read.csv("quiz_scores.csv", header = TRUE)
-summary(quiz_scores$final_score)
+quiz_scores$total_answertime <- quiz_scores$quiz1_answertime + quiz_scores$quiz2_answertime + 
+  quiz_scores$quiz3_answertime + quiz_scores$quiz4_answertime # new variable: total answer time
 
 hist(quiz_scores$final_score, breaks = 5, main = "Histogram of Quiz Final Score", xlab = "Final Score")
+
+# Histogram: final score
+ggplot(quiz_scores, aes(x = final_score)) + 
+  geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+  ggtitle("Quiz Score Distribution") +
+  xlab("Final Score") +
+  ylab("Frequency") +
+  theme(panel.background = element_blank(),
+        axis.line = element_line(colour = "darkgray"))
+
+ggplot(quiz_scores, aes(x = total_answertime, y = final_score)) +
+  ggtitle("Correlation between Final Score and Answer Time") +
+  xlab("Total Answer Time (Seconds)") +
+  ylab("Final Score") +
+  geom_point(color = "darkblue") +
+  geom_smooth(method='lm', se = FALSE, color = "darkred", size = 0.7) +
+  theme_bw()
+
+plot(x = quiz_scores$total_answertime, y = quiz_scores$final_score, 
+     main = "Correlation between Final Score and Answer Time",
+     xlab = "Total Answer Time (Seconds)",
+     ylab = "Final Score")
+abline(lm(final_score ~ total_answertime, data = quiz_scores))
+
+
 ```
 
 ### Feedback

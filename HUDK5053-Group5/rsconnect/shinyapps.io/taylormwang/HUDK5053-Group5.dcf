@@ -5,8 +5,8 @@ account: taylormwang
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2516528
-bundleId: 3329127
+bundleId: 3329792
 url: https://taylormwang.shinyapps.io/HUDK5053-Group5/
-when: 1593430714.87706
+when: 1593441121.1059
 asMultiple: FALSE
 asStatic: FALSE

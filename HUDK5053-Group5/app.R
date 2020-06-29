@@ -34,7 +34,7 @@ body <- dashboardBody(
                     box(title = "General Information", status = "primary", width = 6, 
                         "Engagement rate: 64%", br(), 
                         "Total correct answers: 23.44%", br(),
-                        "Average score: 683.94 points", br(),
+                        "Average score: 683.94 points", 
                         plotOutput("plotall", height = 344)),
                     tabBox(id = "tabchart1", width = 6,
                            tabPanel("Quiz1", plotOutput("plot1")),
@@ -47,7 +47,7 @@ body <- dashboardBody(
                     
                 ),
                 fluidRow(
-                    tabBox(id = "tabchart2", title = "Overall Satisfaction", width = 6,
+                    tabBox(id = "tabchart2", title = "Overall Satisfaction: Sentiments", width = 6,
                            tabPanel("Frequency", plotOutput("sentiment.count")),
                            tabPanel("Percentage", plotOutput("sentiment.perc"))
                     ),
@@ -79,38 +79,57 @@ server <- function(input, output, session) {
     
     # Plot Histogram: final score
     output$plotall <- renderPlot({
-        hist(quiz_scores$final_score, 
-             breaks = 5, 
-             main = "Quiz Score Distribution", 
-             xlab = "Final Score")
+        ggplot(quiz_scores, aes(x = final_score)) + 
+            geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+            ggtitle("Quiz Score Distribution") +
+            xlab("Final Score") +
+            ylab("Frequency") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Plot Histogram: quiz 1
     output$plot1 <- renderPlot({
-        hist(quiz_scores$quiz1_score, 
-             main = "Quiz 1 Score Distribution", 
-             xlab = "Score")
+        ggplot(quiz_scores, aes(x = quiz1_score)) + 
+            geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+            ggtitle("Quiz 1 Score Distribution") +
+            xlab("Score") +
+            ylab("Frequency") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Plot Histogram: quiz 2
     output$plot2 <- renderPlot({
-        hist(quiz_scores$quiz2_score, 
-             main = "Quiz 2 Score Distribution", 
-             xlab = "Score")
+        ggplot(quiz_scores, aes(x = quiz2_score)) + 
+            geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+            ggtitle("Quiz 2 Score Distribution") +
+            xlab("Score") +
+            ylab("Frequency") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Plot Histogram: quiz 3
     output$plot3 <- renderPlot({
-        hist(quiz_scores$quiz3_score, 
-             main = "Quiz 3 Score Distribution", 
-             xlab = "Score")
+        ggplot(quiz_scores, aes(x = quiz3_score)) + 
+            geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+            ggtitle("Quiz 3 Score Distribution") +
+            xlab("Score") +
+            ylab("Frequency") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Plot Histogram: quiz 4
     output$plot4 <- renderPlot({
-        hist(quiz_scores$quiz4_score, 
-             main = "Quiz 4 Score Distribution", 
-             xlab = "Score")
+        ggplot(quiz_scores, aes(x = quiz4_score)) + 
+            geom_histogram(colour="darkblue", fill="lightblue", alpha = 0.3, bins = 5) +
+            ggtitle("Quiz 4 Score Distribution") +
+            xlab("Score") +
+            ylab("Frequency") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Comparison
@@ -125,19 +144,23 @@ server <- function(input, output, session) {
         data <- data.frame(quiz = quiz, mean_score = mean_score)
         
         ggplot(data) +
-            geom_col(aes(x = quiz, y = mean_score)) +
+            geom_col(aes(x = quiz, y = mean_score), colour="darkblue", fill="lightblue", alpha = 0.3) +
             ggtitle("Comparison of Mean Score across Quizzes") +
             xlab("Quiz") +
-            ylab("Average score")
+            ylab("Average score") +
+            theme(panel.background = element_blank(),
+                  axis.line = element_line(colour = "darkgray"))
     })
     
     # Correlation between Final Score and Answer Time
     output$corr <- renderPlot({
-        plot(x = quiz_scores$total_answertime, y = quiz_scores$final_score, 
-             main = "Correlation between Final Score and Answer Time",
-             xlab = "Total Answer Time (Seconds)",
-             ylab = "Final Score")
-        abline(lm(final_score ~ total_answertime, data = quiz_scores))
+        ggplot(quiz_scores, aes(x = total_answertime, y = final_score)) +
+            ggtitle("Correlation between Final Score and Answer Time") +
+            xlab("Total Answer Time (Seconds)") +
+            ylab("Final Score") +
+            geom_point(color = "darkblue") +
+            geom_smooth(method='lm', se = FALSE, color = "darkred", size = 0.7) +
+            theme_bw()
     })
     
     
@@ -247,14 +270,15 @@ server <- function(input, output, session) {
         levels_6 <- c("Strongly agree", "Agree", "Somewhat agree", 
                       "Somewhat disagree", "Disagree", "Strongly disagree")
         
-        plot_likert(likert_6, 
-                    legend.labels = levels_6, 
-                    reverse.colors = TRUE, 
-                    values = "sum.outside", 
-                    title = "Questionnaire Feedback",
-                    geom.size = 0.8,
-                    show.prc.sign = TRUE,
-                    grid.range = c(0.8,1.2))
+        p <- plot_likert(likert_6, 
+                         legend.labels = levels_6, 
+                         reverse.colors = TRUE, 
+                         values = "sum.outside", 
+                         title = "Questionnaire Feedback",
+                         geom.size = 0.8,
+                         show.prc.sign = TRUE,
+                         grid.range = c(0.8,1.2))
+        p + theme_bw()
     })
     
     # survey questions
@@ -271,7 +295,6 @@ server <- function(input, output, session) {
     })
     
 }
-
 
 # Run the application 
 shinyApp(ui, server)
