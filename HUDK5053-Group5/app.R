@@ -51,8 +51,9 @@ body <- dashboardBody(
                            tabPanel("Frequency", plotOutput("sentiment.count")),
                            tabPanel("Percentage", plotOutput("sentiment.perc"))
                     ),
-                    box(title = "Survey Feedback: Likert-scales", solidHeader = TRUE, width = 6,
-                        plotOutput("likert.scale"))
+                    tabBox(title = "Survey Feedback: Likert-scales", width = 6, selected = "Plot",
+                           tabPanel("Questions", htmlOutput("q.list")), 
+                           tabPanel("Plot", plotOutput("likert.scale")))
                 )
         )
     )
@@ -134,7 +135,7 @@ server <- function(input, output, session) {
     output$corr <- renderPlot({
         plot(x = quiz_scores$total_answertime, y = quiz_scores$final_score, 
              main = "Correlation between Final Score and Answer Time",
-             xlab = "Total Answer Time",
+             xlab = "Total Answer Time (Seconds)",
              ylab = "Final Score")
         abline(lm(final_score ~ total_answertime, data = quiz_scores))
     })
@@ -254,6 +255,19 @@ server <- function(input, output, session) {
                     geom.size = 0.8,
                     show.prc.sign = TRUE,
                     grid.range = c(0.8,1.2))
+    })
+    
+    # survey questions
+    output$q.list <- renderUI({
+        ques.list <- c("Q1: I have background knowledge of conditional probability.",
+                       "Q2: I like the topic that group 5 taught us today.",
+                       "Q3: I think the conditional probability is useful in my career development.",
+                       "Q4: I think the conditional probability is useful in my academic development.",
+                       "Q5: I think today's quizzes are difficult.",
+                       "Q6: Overall, group 5 designed the mini-class very well.",
+                       "Q7: Group 5 members taught the concept clearly.",
+                       "Q8: The in-class activities are interesting.")
+        HTML(paste(ques.list, sep = "", collapse = '<br/>'))
     })
     
 }
